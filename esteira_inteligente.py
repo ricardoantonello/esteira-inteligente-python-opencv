@@ -14,7 +14,9 @@ from matplotlib import pyplot as plt
 #import sys
 #print(sys.executable)
 
-def texto(img, texto, coord, fonte = cv2.FONT_HERSHEY_SIMPLEX, cor=(0,0,0), tamanho=0.5, thickness=0):
+threshold_GLOBAL = 160
+
+def texto(img, texto, coord, fonte = cv2.FONT_HERSHEY_SIMPLEX, cor=(0,0,255), tamanho=1.7, thickness=2):
     textSize, baseline = cv2.getTextSize(texto, fonte, tamanho, thickness);
     cor_background = 0
     if type(cor)==int: # se não for colorida a imagem
@@ -23,6 +25,7 @@ def texto(img, texto, coord, fonte = cv2.FONT_HERSHEY_SIMPLEX, cor=(0,0,0), tama
         cor_background=(255-cor[0],255-cor[1],255-cor[2])
     #print(cor_background)
     cv2.rectangle(img, (coord[0], coord[1]-textSize[1]-3), (coord[0]+textSize[0], coord[1]+textSize[1]-baseline), cor_background, -1)
+    #cv2.putText(img, texto, coord, fonte, tamanho, cor_background, thickness+1, cv2.LINE_AA)
     cv2.putText(img, texto, coord, fonte, tamanho, cor, thickness, cv2.LINE_AA)
     return img
 
@@ -42,7 +45,7 @@ def filtros(img):
     pb = blur.copy()
     #exibe(img, pb)
     # Threshold ou Binarização
-    (T, bin) = cv2.threshold(pb, 150, 255, cv2.THRESH_BINARY)
+    (T, bin) = cv2.threshold(pb, threshold_GLOBAL, 255, cv2.THRESH_BINARY)
     #exibe(img, bin, t1="Imagem original", t2="Threshold")
     ### Inverte preto e branco
     img_inv = 255-bin # inverte a imagem
@@ -79,8 +82,8 @@ def detecta(img, _minThreshold=120, _maxThreshold=255, _minArea=3000, _maxArea=3
     #print(keypoints)
     #print("Detectando Blobs... Tempo: %.2f segundos" % (time.time()-inicio))
     img_blobs=cv2.drawKeypoints(img, keypoints, None, (0,255,0), cv2.DRAW_MATCHES_FLAGS_DEFAULT) #For Python API, flags are modified as cv2.DRAW_MATCHES_FLAGS_DEFAULT, cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS, cv2.DRAW_MATCHES_FLAGS_DRAW_OVER_OUTIMG, cv2.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS
-    for k in keypoints:
-       cv2.circle(img_blobs, (int(k.pt[0]), int(k.pt[1])), int(k.size)//2, 255, 3);
+    #for k in keypoints:
+    #   cv2.circle(img_blobs, (int(k.pt[0]), int(k.pt[1])), int(k.size)//2, 255, 3);
     return img_blobs, keypoints
 
 def encontraCor(img): #imagem deve estar em formato RGB
@@ -97,7 +100,7 @@ def encontraCor(img): #imagem deve estar em formato RGB
         if p>200:
             blue_pixels+=1
     CORTE = 150
-    print('r',red_pixels,'g',green_pixels,'b',blue_pixels)
+    #print('r',red_pixels,'g',green_pixels,'b',blue_pixels)
     if red_pixels>CORTE and green_pixels>CORTE:
         return "Amarelo"
     elif red_pixels>CORTE:
@@ -184,10 +187,10 @@ def imprime_canais(img):
     
 def detectaCor_e_Forma(img):
     original = img
-    eq, i_YCrCb = equaliza_imagem_colorida(img)
+    #eq, i_YCrCb = equaliza_imagem_colorida(img)
     #img=eq nao esta usando a imagem equalizada
     r,g,b = imprime_canais(img)
-    hist = cv2.resize(imprime_hist(img), (640,240))
+    #hist = cv2.resize(imprime_hist(img), (640,240))
     cor = encontraCor(img)    
 
     #print("Cor:", cor)
@@ -203,41 +206,57 @@ def detectaCor_e_Forma(img):
     #exibe(img, final, t1=f, t2=str(forma+' '+cor))
     #print(f)
 
-    ###########################Aciona LED da FORMA
-    if forma=="Circulo":
+    ########################### Aciona LED da FORMA
+#    if forma=="Circulo":
         #Aciona LED
-        print('teste')
-    elif cor=="Quadrado":
-        #Aciona LED
-        print('teste')
-    elif cor=="Triangulo":
-        #Aciona LED
-        print('teste')
         
-    ###########################Aciona LED DA COR
-    if cor=="Amarelo":
+#    elif cor=="Quadrado":
         #Aciona LED
-        print('teste')
-    elif cor=="Vermelho":
+        
+#    elif cor=="Triangulo":
         #Aciona LED
-        print('teste')
-    elif cor=="Azul":
+        
+        
+    ########################### Aciona LED DA COR
+#    if cor=="Amarelo":
         #Aciona LED
-        print('teste')
+        
+#    elif cor=="Vermelho":
+        #Aciona LED
+        
+#    elif cor=="Azul":
+        #Aciona LED
+        
 
-    
-    if forma != '' and cor != '': texto(final, forma+' '+cor, (10,20))
-    h1 = np.hstack([original, eq, i_YCrCb, blur])
-    h2 = np.hstack([filtro, final, hist])
-    h3 = np.hstack([r, g, b, img])
-    pilha = np.vstack([h1,h2,h3])
+    #imprime a pilha completa
+    #h1 = np.hstack([original, eq, i_YCrCb, blur])
+    #h2 = np.hstack([filtro, final, hist])
+    #h3 = np.hstack([r, g, b, img])
+    #pilha = np.vstack([h1,h2,h3])
+
+    #pilha reduzida só com final e RGB
+    h1 = np.hstack([final, r])
+    h2 = np.hstack([g, b])
+    pilha = np.vstack([h1, h2])
+
+    #h1 = np.hstack([original, 
+
+    if forma != '' and cor != '': texto(pilha, forma+' '+cor, (10,250))
+
     #plt.imshow(pilha)
     return pilha
-
+ 
+#####################################
+## INICIO MAIN
+#####################################
+print('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n')
 print('Bem vindo(a) à ESTEIRA INTELIGENTE!')
-print('1. Câmera Pi')
+print('\n\n\nSelecione a fonte da imagem:')
+print('\n1. Câmera Pi')
 print('2. Webcam')
-op = int(input('Opção: '))
+op = int(input('\nOpção: '))
+input('\n\n\nLimpe a área de leitura para calibrar e selecione 1 para iniciar...')
+
 if op==1:
    try:
      from picamera.array import PiRGBArray
@@ -250,6 +269,8 @@ if op==1:
       
      # allow the camera to warmup
      time.sleep(0.1)
+
+       
       
      # capture frames from the camera
      for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
@@ -270,6 +291,7 @@ if op==1:
          break
    except ImportError:
      print('Não esta rodando em um Raspberry')
+
 elif op==2:
   # Se não tem picamera então captura da webcam
   vc = cv2.VideoCapture(0)
@@ -280,9 +302,36 @@ elif op==2:
   else:
      is_capturing = False  
 
+  # calibragem
+  img_clean = 0
+  cont = 0
+  while is_capturing:
+    try: # Lookout for a keyboardInterrupt to stop the script
+      is_capturing, frame = vc.read()   
+      print('Calibrando... Aguarde!')
+      time.sleep(0.2)
+      if cont > 0:
+          #img_clean = cv2.accumulate(frame, img_clean)
+          img_clean = frame.copy()
+      else:
+          img_clean = frame.copy()
+      cont+=1
+      if cont>2:
+        break
+    
+    except KeyboardInterrupt:
+      vc.release()
+    except:
+      print('Erro!')
+      vc.release()
+
+
   while is_capturing:
      try:    # Lookout for a keyboardInterrupt to stop the script
          is_capturing, frame = vc.read()   
+
+         #sem usar calibragem
+         #frame = frame - img_clean
 
          #frame = cv2.imread('circulo_amarelo.jpg')
          #frame = cv2.imread('triangulo_vermelho.jpg')
@@ -290,8 +339,14 @@ elif op==2:
          #frame = cv2.resize(frame[:,:,::-1], (320,240))
 
          i = detectaCor_e_Forma(frame[:,:,::-1]) #vai em formato RGB
-         cv2.namedWindow( "Formas", flags=cv2.WND_PROP_FULLSCREEN);
-         cv2.imshow("Formas", i[:,:,::-1]) #converte para BGR para mostrar
+         window_name = "Formas"
+         #cv2.namedWindow(window_name, flags=cv2.WND_PROP_FULLSCREEN);
+
+         cv2.namedWindow(window_name, cv2.WND_PROP_FULLSCREEN)
+         cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+
+         cv2.imshow(window_name, i[:,:,::-1]) #converte para BGR para mostrar
          key = cv2.waitKey(1) & 0xFF
          # if the `q` key was pressed, break from the loop
          if key == ord("q"):
