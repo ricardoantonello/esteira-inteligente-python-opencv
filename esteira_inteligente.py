@@ -16,7 +16,7 @@ from matplotlib import pyplot as plt
 
 threshold_GLOBAL = 160
 
-def texto(img, texto, coord, fonte = cv2.FONT_HERSHEY_SIMPLEX, cor=(0,0,255), tamanho=1.7, thickness=2):
+def texto(img, texto, coord, fonte = cv2.FONT_HERSHEY_SIMPLEX, cor=(0,0,255), tamanho=0.7, thickness=2):
     textSize, baseline = cv2.getTextSize(texto, fonte, tamanho, thickness);
     cor_background = 0
     if type(cor)==int: # se não for colorida a imagem
@@ -52,7 +52,7 @@ def filtros(img):
     #exibe(img, img_inv, t1="Imagem original", t2="Imagem invertida")
     return img_inv, blur
 
-def detecta(img, _minThreshold=120, _maxThreshold=255, _minArea=3000, _maxArea=30000, _minCircularity=0.9, _maxCircularity=1.0, 
+def detecta(img, _minThreshold=120, _maxThreshold=255, _minArea=3000, _maxArea=300000, _minCircularity=0.9, _maxCircularity=1.0, 
                  _minConvexity=0.5, _maxConvexity=1.0, _minInertiaRatio=0.9, _maxInertiaRatio=1.0):
     
     params = cv2.SimpleBlobDetector_Params() # Setup SimpleBlobDetector parameters.
@@ -257,31 +257,62 @@ print('2. Webcam')
 op = int(input('\nOpção: '))
 input('\n\n\nLimpe a área de leitura para calibrar e selecione 1 para iniciar...')
 
+
 if op==1:
    try:
      from picamera.array import PiRGBArray
      from picamera import PiCamera
      # initialize the camera and grab a reference to the raw camera capture
-     camera = PiCamera()
+     camera = PiCamera(sensor_mode=1) # se for 7 vai a 90 fps
      camera.resolution = (320, 240) #camera.resolution = (640, 480)
      camera.framerate = 32
-     rawCapture = PiRGBArray(camera, size=(320, 240)) #rawCapture = PiRGBArray(camera, size=(640, 480))
+     
+     
+     camera.zoom = (0.35, 0.45, 0.1, 0.1)
+     time.sleep(3)
+     camera.exposure_mode='off'
+     camera.zoom = (0.0, 0.0, 1.0, 1.0)
+     
+     
+     #print('analog_gain', camera.analog_gain, 'digital_gain', camera.digital_gain)
+     
+     camera.iso=400
+     camera.exposure_compensation = 25
+     
+     #camera.awb_mode = 'off'
+     camera.awb_mode = 'fluorescent'
+     #camera.awb_gains = (1.5,1.5) # NORMALMENTE 0,9 A 1,9 MAS VAI DE 0 a 8
+     
+     #camera.drc_strength='off'
+     camera.sharpness=100 # -100 a 100
+     
+     rawCapture = PiRGBArray(camera) #rawCapture = PiRGBArray(camera, size=(640, 480))
       
      # allow the camera to warmup
      time.sleep(0.1)
-
        
       
      # capture frames from the camera
      for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
        # grab the raw NumPy array representing the image, then initialize the timestamp
        # and occupied/unoccupied text
+       #print('exposure_compensation', camera.exposure_compensation, 'iso', camera.iso, 'analog_g', camera.analog_gain, 'digital_g', camera.digital_gain)
+       camera.awb_gains = (1.5,1.5) # NORMALMENTE 0,9 A 1,9 MAS VAI DE 0 a 8
+     
        image = frame.array
        image = image.copy()
+       
+       image = image[::-1,::-1,::-1] # inverte BGR RGB e inverte linhas e colunas
+       
+       image = image[80:320,90:200]
+       
        #image = image.copy()
        #image[10:60,:,:] = (255,0,0)
        i = detectaCor_e_Forma(image)
        # show the frame
+       
+       i = i[:,:,::-1] # inverte BGR RGB
+       
        cv2.imshow("Frame", i)
        key = cv2.waitKey(1) & 0xFF
        # clear the stream in preparation for the next frame
@@ -359,3 +390,4 @@ else:
 
 
         
+                                                    
